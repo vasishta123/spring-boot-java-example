@@ -3,6 +3,7 @@ trigger:
     include:
       - main
 
+# Use your self-hosted agent pool
 pool:
   name: 'Default'
 
@@ -10,13 +11,6 @@ variables:
   mavenOpts: '-Xmx1024m'
 
 steps:
-  - task: JavaToolInstaller@0
-    displayName: 'Install Java 21'
-    inputs:
-      versionSpec: '21'
-      jdkArchitectureOption: 'x64'
-      jdkSourceOption: 'PreInstalled'
-
   - task: Maven@4
     displayName: 'Maven clean package'
     inputs:
@@ -25,9 +19,8 @@ steps:
       options: '-Dmaven.test.failure.ignore=false'
       publishJUnitResults: true
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
-      javaHomeOption: 'JDKVersion'
+      javaHomeOption: 'Path'         # <- use Java from PATH (your Temurin 21)
       mavenOptions: '$(mavenOpts)'
-      jdkVersionOption: '1.17' # leave this; JavaToolInstaller already put 21 on PATH
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish JAR artifact'
