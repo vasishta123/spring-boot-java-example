@@ -1,0 +1,37 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  mavenOpts: '-Xmx1024m'
+
+steps:
+  - task: JavaToolInstaller@0
+    displayName: 'Install Java 21'
+    inputs:
+      versionSpec: '21'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
+
+  - task: Maven@4
+    displayName: 'Maven clean package'
+    inputs:
+      mavenPomFile: 'pom.xml'
+      goals: 'clean package'
+      options: '-Dmaven.test.failure.ignore=false'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      javaHomeOption: 'JDKVersion'
+      mavenOptions: '$(mavenOpts)'
+      jdkVersionOption: '1.17' # leave this; JavaToolInstaller already put 21 on PATH
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish JAR artifact'
+    inputs:
+      PathtoPublish: 'target'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
