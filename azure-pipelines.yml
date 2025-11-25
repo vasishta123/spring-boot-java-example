@@ -3,21 +3,21 @@ trigger:
     include:
       - main
 
-# Use your self-hosted agent
 pool:
-  name: 'Default'
+  name: 'Default'   # your self-hosted agent
 
 variables:
   mavenOpts: '-Xmx1024m'
+  deployFolder: 'C:\apps\springboot-dev'
 
 steps:
   - task: Maven@4
     displayName: 'Maven clean package (skip tests)'
     inputs:
-      mavenPomFile: 'pom.xml'          # note: 'Pom', not 'POM'
+      mavenPomFile: 'pom.xml'
       goals: 'clean package'
-      options: '-DskipTests'           # <-- skip tests in CI
-      publishJUnitResults: false       # no test reports when skipping
+      options: '-DskipTests'
+      publishJUnitResults: false
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
       mavenOptions: '$(mavenOpts)'
 
@@ -27,3 +27,26 @@ steps:
       PathtoPublish: 'target'
       ArtifactName: 'drop'
       publishLocation: 'Container'
+
+  # "Deploy" step: copy built JAR to a fixed folder on your machine
+  - task: PowerShell@2
+    displayName: 'Copy JAR to local deploy folder'
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "Deploy folder: $(deployFolder)"
+        if (!(Test-Path "$(deployFolder)")) {
+          New-Item -ItemType Directory -Path "$(deployFolder)" | Out-Null
+        }
+
+        # Find the built JAR in the agent work folder
+        $jar = Get-ChildItem "$(System.DefaultWorkingDirectory)" -Recurse -Filter "spring-boot-java-example*.jar" | Select-Object -First 1
+
+        if ($null -eq $jar) {
+          Write-Error "No JAR found to deploy."
+          exit 1
+        }
+
+        Write-Host "Found JAR: $($jar.FullName)"
+        Copy-Item $jar.FullName "$(deployFolder)\app.jar" -Force
+        Write-Host "Copied to $(deployFolder)\app.jar"
