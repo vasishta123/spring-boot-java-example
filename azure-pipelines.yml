@@ -8,7 +8,7 @@ pool:
 
 variables:
   mavenOpts: '-Xmx1024m'
-  deployFolder: 'C:\apps\springboot-dev'
+  deployFolder: 'C:\Users\admin\Downloads\springboot-dev'
 
 steps:
   - task: Maven@4
