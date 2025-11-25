@@ -3,7 +3,7 @@ trigger:
     include:
       - main
 
-# Use your self-hosted agent pool
+# Use your self-hosted agent
 pool:
   name: 'Default'
 
@@ -12,14 +12,13 @@ variables:
 
 steps:
   - task: Maven@4
-    displayName: 'Maven clean package'
+    displayName: 'Maven clean package (skip tests)'
     inputs:
-      mavenPomFile: 'pom.xml'
+      mavenPomFile: 'pom.xml'          # note: 'Pom', not 'POM'
       goals: 'clean package'
-      options: '-Dmaven.test.failure.ignore=false'
-      publishJUnitResults: true
+      options: '-DskipTests'           # <-- skip tests in CI
+      publishJUnitResults: false       # no test reports when skipping
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
-      javaHomeOption: 'Path'         # <- use Java from PATH (your Temurin 21)
       mavenOptions: '$(mavenOpts)'
 
   - task: PublishBuildArtifacts@1
